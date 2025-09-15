@@ -1,5 +1,7 @@
 #include <iostream>
 #include <iomanip>
+#include <climits>
+
 
 typedef unsigned char* byte_pointer;
 
@@ -40,7 +42,16 @@ void test_show_bytes(int val) {
 
 
 int main() {
-  int x = 10;
-  test_show_bytes(x);
+  int min = INT_MIN;
+  int max = INT_MAX;
+  int zero = 0;
+  int neg = -100;
+  int pos = 100;
+  int vals[] = {min, max, zero, neg, pos};
+  for (int val : vals) {
+    std::cout << "Val: " << std::dec << val << std::endl;
+    test_show_bytes(val);
+    std::cout << std::endl;
+  }
 }
 
