@@ -183,7 +183,12 @@ int isTmax(int x) {
  *   Rating: 2
  */
 int allOddBits(int x) {
-  return 2;
+  int odd_bits = 0xAA;
+  int mask = 0xAA;
+  mask = (mask << 8) + odd_bits;
+  mask = (mask << 8) + odd_bits;
+  mask = (mask << 8) + odd_bits;
+  return !((x & mask) ^ mask); 
 }
 /* 
  * negate - return -x 
@@ -193,7 +198,7 @@ int allOddBits(int x) {
  *   Rating: 2
  */
 int negate(int x) {
-  return 2;
+  return ~x + 1;
 }
 //3
 /* 
@@ -206,8 +211,11 @@ int negate(int x) {
  *   Rating: 3
  */
 int isAsciiDigit(int x) {
-  return 2;
+  int lt_upper = !((x >> 6) ^ 0) & (!(x & 6) | !(x & 8));
+  int gt_lower = !((x >> 4) ^ 3);
+  return lt_upper & gt_lower;
 }
+
 /* 
  * conditional - same as x ? y : z 
  *   Example: conditional(2,4,5) = 4
@@ -216,7 +224,9 @@ int isAsciiDigit(int x) {
  *   Rating: 3
  */
 int conditional(int x, int y, int z) {
-  return 2;
+  int condition = !!x;	// 0 when x = 0, otherwise 1
+  int mask = ~condition + 1;  // 0 when x = 0, otherwise -1
+  return (mask & y) | (~mask & z); 
 }
 /* 
  * isLessOrEqual - if x <= y  then return 1, else return 0 
@@ -226,19 +236,30 @@ int conditional(int x, int y, int z) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-  return 2;
+  int x_sign = x >> 31;
+  int y_sign = y >> 31;
+  int diff = y + (~x + 1);
+  int diff_sign = diff >> 31;
+  // x and y have different signed, and x is neg, y is pos -> x <= y
+  int cond1 = (x_sign ^ y_sign) & (x_sign & !y_sign); 
+  // x and y have same sign, and their diff has pos sign -> x <= y
+  int cond2 = !(x_sign ^ y_sign) & !diff_sign; 
+  return cond1 | cond2; 
+
 }
 //4
 /* 
  * logicalNeg - implement the ! operator, using all of 
  *              the legal operators except !
- *   Examples: logicalNeg(3) = 0, logicalNeg(0) = 1
+*   Examples: logicalNeg(3) = 0, logicalNeg(0) = 1
  *   Legal ops: ~ & ^ | + << >>
  *   Max ops: 12
  *   Rating: 4 
  */
 int logicalNeg(int x) {
-  return 2;
+  int x_sign = x >> 31 & 1;
+  int neg_sign = (~x + 1) >> 31 & 1; 
+  return ~(x_sign | neg_sign)+2;
 }
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
