@@ -274,7 +274,8 @@ int logicalNeg(int x) {
  *  Rating: 4
  */
 int howManyBits(int x) {
-  return 0;
+  
+  return ;
 }
 //float
 /* 
