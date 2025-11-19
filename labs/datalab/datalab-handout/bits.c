@@ -274,35 +274,49 @@ int logicalNeg(int x) {
  *  Rating: 4
  */
 int howManyBits(int x) {
-	int x_sign = x >> 31; 
+	int x_sign, res, block, mask, shift;  
+
+	x_sign = x >> 31;
 	x = x ^ x_sign; // x ^ 0 = x, x ^ -1 = ~x 
-	int res = 0;
-	int block = 16;
-	int mask = x >> block; 
-	int seen = ~(!!mask) + 1;
-	res += block & seen;
-	x = x << (block & ~seen);
+	res = 0;
+
+	block = 16;
+	mask = x >> block; 
+	shift = (!!mask) << 4;
+	res += shift;
+	x >>= shift; 
+
 	block = 8;
 	mask = x >> block; 
-	seen = ~(!!mask) + 1;
-	res += block & seen;
-	x = x << (block & ~seen);
+	shift = (!!mask) << 3;
+	res += shift;
+	x >>= shift; 
+
 	block = 4;
 	mask = x >> block; 
-	seen = ~(!!mask) + 1;
-	res += block & seen;
-	x = x << (block & ~seen);
+	shift = (!!mask) << 2;
+	res += shift; 
+	x >>= shift; 
+	
 	block = 2;
 	mask = x >> block; 
-	seen = ~(!!mask) + 1;
-	res += block & seen;
-	x = x << (block & ~seen);
+	shift = (!!mask) << 1;
+	res += shift; 
+	x >>= shift; 
+
 	block = 1; 
 	mask = x >> block; 
-	seen = ~(!!mask) + 1;
-	res += block & seen;
-	x = x << (block & ~seen);
-	return res;
+	shift = (!!mask);
+	res += shift; 
+	x >>= shift; 
+
+	block = 0; 
+	mask = x >> block; 
+	shift = (!!mask);
+	res += shift; 
+	x >>= shift; 
+
+	return res + 1;
 }
 //float
 /* 
