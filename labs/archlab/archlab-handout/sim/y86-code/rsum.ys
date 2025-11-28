@@ -1,0 +1,41 @@
+# execution starts at address 0
+    .pos 0
+    irmovq stack, %rsp      # set up stack pointer
+    call main               # execute main program
+    halt                    # terminate program
+
+# sample linked list
+    .align 8
+ele1:
+    .quad 0x00a
+    .quad ele2
+ele2:
+    .quad 0x0b0
+    .quad ele3
+ele3:
+    .quad 0xc00
+    .quad 0
+
+
+main:   irmovq ele1, %rdi
+    call rsum_list           # rsum_list(list_ptr ls)
+    ret
+
+rsum_list:    pushq %rbx    # save rbx
+    rrmovq %rdi, %rbx       # store elex in callee saved
+    irmovq $8, %r8          # constant 8 
+    xorq %rax, %rax         # val = 0
+    andq %rdi, %rdi         # set CC
+    je done 
+    rrmovq %rdi, %r10  
+    addq %r8, %r10          # get ls->next
+    mrmovq (%r10), %rdi     # ls = ls->next 
+    call rsum_list          # call rsum_list(ls->next)
+    mrmovq (%rbx), %r9
+    addq %r9, %rax          # val + rest
+done:    popq %rbx           # restore rbx 
+    ret
+
+# stack start here
+    .pos 0x200
+stack:

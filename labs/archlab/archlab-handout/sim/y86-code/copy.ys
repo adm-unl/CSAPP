@@ -1,0 +1,43 @@
+# execution starts at address 0
+    .pos 0
+    irmovq stack, %rsp      # set up stack pointer
+    call main               # execute main program
+    halt                    # terminate program
+
+# sample block 
+    .align 8
+# source block
+src:
+    .quad 0x00a
+    .quad 0x0b0
+    .quad 0xc00
+# destination block
+dest:
+    .quad 0x111
+    .quad 0x222
+    .quad 0x333
+
+main:   irmovq src, %rdi
+    irmovq dest, %rsi
+    irmovq $3, %rdx
+    call copy_block         # sum_list(list_ptr ls)
+    ret
+
+copy_block:    irmovq $8, %r8 # constant 8 
+    irmovq $1, %r9          # constant 1
+    xorq %rax, %rax         # result = 0
+    andq %rdx, %rdx         # set CC
+    jmp test
+loop:    mrmovq (%rdi), %r10 # val = *src 
+    rmmovq %r10, (%rsi)     # *dest = val 
+    xorq %r10, %rax         # result ^= val
+    addq %r8, %rdi          # src++
+    addq %r8, %rsi          # dest++
+    subq %r9, %rdx          # len--
+    andq %rdx, %rdx         # set CC
+test:    jne loop           # stop when len <= 0 
+    ret
+
+# stack start here
+    .pos 0x200
+stack:

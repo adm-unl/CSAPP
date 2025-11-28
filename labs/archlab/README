@@ -1,0 +1,30 @@
+archlab-handout directory contains my solutions to parts A, B and, C of the lab.
+
+For part A solution, see the following files in sim/y86-code directory:
+    sum.ys - Y86-64 implementation of the sum_list C function. 
+    rsum.ys - Y86-64 implementation of the rsum_list C function.
+    copy.ys - Y86-64 implementation of the copy_block C function.
+
+For part B solution, see the following files in the sim/seq directory:
+    seq-full.hcl - implements IADDQ instruction into SEQ hardware description.
+
+For part C solution, see the following files in the sim/pipe directory:
+    pipe-full.hcl - implements IADDQ instruction into the PIPE hardware description.
+    ncopy.ys - contains optimised version of the original ncopy.ys function. 
+    
+    Here is a list of the optimisations made to the ncopy function:
+        - reduced total number of instructions inside inner loop by replacing 
+          (irmovq -> opq) instructions sequences with a single iaddq instruction. 
+        - implemented 2x1 loop unrolling to reduce number of loop iterations. 
+        - avoided load and use hazard by rearranging the order of read and write
+          instructions inside inner loop.
+        - removed redundant instructions for condition checking (e.g., removed
+          andq %rdx, %rdx instruction by reordering decrementing length to just
+          before conditional jump instruction). 
+        - attempted to implement data transfer to reduce number of jumps in inner
+          loop but control transfer seemed to perform better. 
+   
+    Achieved an average CPE of 8.75, reduced by nearly a factor of 2 from the 
+    initial average of 15.18.
+    
+

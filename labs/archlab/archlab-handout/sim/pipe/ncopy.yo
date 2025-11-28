@@ -1,0 +1,54 @@
+                            | #/* $begin ncopy-ys */
+                            | ##################################################################
+                            | # ncopy.ys - Copy a src block of len words to dst.
+                            | # Return the number of positive words (>0) contained in src.
+                            | #
+                            | # Include your name and ID here.
+                            | #
+                            | # Describe how and why you modified the baseline code.
+                            | #
+                            | ##################################################################
+                            | # Do not modify this portion
+                            | # Function prologue.
+                            | # %rdi = src, %rsi = dst, %rdx = len
+0x000:                      | ncopy:
+                            | 
+                            | ##################################################################
+                            | # You can modify this portion
+                            | 	# Loop header
+0x000: 6300                 | 	xorq %rax,%rax		# count = 0;
+0x002: c0f2ffffffffffffffff |     iaddq $-1, %rdx     # limit = len - 1
+0x00c: 718e00000000000000   | 	jle Odd		# if so, goto Done:
+                            | 
+0x015: 50970000000000000000 | Loop:	mrmovq (%rdi), %r9	# read val from src...
+0x01f: 40960000000000000000 | 	rmmovq %r9, (%rsi)	# ...and store it to dst
+0x029: 50a70800000000000000 |     mrmovq 8(%rdi), %r10
+0x033: 40a60800000000000000 |     rmmovq %r10, 8(%rsi)
+0x03d: 6299                 | 	andq %r9, %r9		# val <= 0?
+0x03f: 715200000000000000   | 	jle Npos1		# if so, goto Npos:
+0x048: c0f00100000000000000 | 	iaddq $1, %rax		# count++
+0x052:                      | Npos1:
+0x052: 62aa                 |     andq %r10, %r10
+0x054: 716700000000000000   |     jle Npos2
+0x05d: c0f00100000000000000 |     iaddq $1, %rax
+0x067:                      | Npos2:
+0x067: c0f71000000000000000 | 	iaddq $16, %rdi		# src++
+0x071: c0f61000000000000000 | 	iaddq $16, %rsi		# dst++
+0x07b: c0f2feffffffffffffff | 	iaddq $-2, %rdx		# limit--
+0x085: 761500000000000000   | 	jg Loop			# if so, goto Loop:
+0x08e:                      | Odd:
+0x08e: 72c000000000000000   |     jl Done 
+0x097: 50970000000000000000 |     mrmovq (%rdi), %r9	# read val from src...
+0x0a1: 40960000000000000000 | 	rmmovq %r9, (%rsi)	# ...and store it to dst
+0x0ab: 6299                 | 	andq %r9, %r9		# val <= 0?
+0x0ad: 71c000000000000000   | 	jle Done		# if so, goto Npos:
+0x0b6: c0f00100000000000000 | 	iaddq $1, %rax		# count++
+                            | ##################################################################
+                            | # Do not modify the following section of code
+                            | # Function epilogue.
+0x0c0:                      | Done:
+0x0c0: 90                   | 	ret
+                            | ##################################################################
+                            | # Keep the following label at the end of your function
+0x0c1:                      | End:
+                            | #/* $end ncopy-ys */
