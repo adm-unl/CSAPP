@@ -23,6 +23,7 @@
 #include <unistd.h>
 #define MAX_SIZE 256
 
+
 typedef struct 
 {
     char op;
@@ -47,10 +48,12 @@ typedef struct
     unsigned long block_offset;
 } AddressComponents;
 
+
 typedef struct
 {
     char valid_bit;
     unsigned long tag;
+    unsigned long time;
 } CacheLine; 
 
 typedef struct
@@ -65,12 +68,21 @@ typedef struct
     CacheSet* sets;
 } Cache;
 
+
 typedef struct
 {
     int hit_count;
     int miss_count;
     int eviction_count;
 } Count;
+
+typedef struct
+{
+    char hit;
+    char missed;
+    char evicted;
+} ResultFlags;
+
 
 void printSummary(int hit_count, int miss_count, int eviction_count);
 
@@ -88,9 +100,14 @@ CacheLine* find_empty_line(CacheSet* set, int E);
 
 int generate_uniform_dist_num(int L, int H);
 
-void access_cache(CacheSet* set, char op, unsigned long tag, int E, Count* cnt);
+ResultFlags access_cache(CacheSet* set, char op, unsigned long tag, int E, Count* cnt);
 
 void printSummary(int hit_count, int miss_count, int eviction_count);
+
+void print_verbose(TraceEntry t, ResultFlags flags);
+
+
+unsigned long global_cnt = 0;
 
 
 int main(int argc, char* argv[])
@@ -110,7 +127,9 @@ int main(int argc, char* argv[])
             continue;
         AddressComponents addr = parse_address(t.full_addr, config.s, config.b);
         CacheSet* set = &cache->sets[addr.set_idx];
-        access_cache(set, t.op, addr.tag, config.E, &cnt);
+        ResultFlags r = access_cache(set, t.op, addr.tag, config.E, &cnt);
+        if (config.verb)
+            print_verbose(t, r);
     }  
     printSummary(cnt.hit_count, cnt.miss_count, cnt.eviction_count);
     return 0;
@@ -201,7 +220,10 @@ char is_hit(CacheSet* set, int E, unsigned long tag)
     {
         CacheLine* line = &set->lines[i];
         if (line->tag == tag && line->valid_bit == 1)
+        {
+            line->time = global_cnt++;
             return 1;
+        }
     } 
     return 0;
 }
@@ -209,9 +231,10 @@ char is_hit(CacheSet* set, int E, unsigned long tag)
 
 CacheLine* find_empty_line(CacheSet* set, int E)
 {
+    CacheLine* line;     
     for (int i = 0; i < E; i++)
     {
-        CacheLine* line = &set->lines[i];
+        line = &set->lines[i];
         if (line->valid_bit == 0)
             return line;
     }
@@ -219,43 +242,64 @@ CacheLine* find_empty_line(CacheSet* set, int E)
 }
 
 
-int generate_uniform_dist_num(int L, int H)
+CacheLine* find_lru_line(CacheSet* set, int E)
 {
-    int result = 0;
-    int n_range = H - L + 1;
-    int n_range_bits = ceil(log2((double)n_range));
-    for (int i = 0; i < n_range_bits; i++)
+    CacheLine* lru_line = &set->lines[0];
+    for (int i = 0; i < E; i++)
     {
-        result += (rand() & 1) << i;
+        if (set->lines[i].time < lru_line->time)
+            lru_line = &set->lines[i];
     }
-    return result;
+    return lru_line;
 }
 
 
-void access_cache(CacheSet* set, char op, unsigned long tag, int E, Count* cnt)
+ResultFlags access_cache(CacheSet* set, char op, unsigned long tag, int E, Count* cnt)
 {
+    ResultFlags flags = {0};
     if (is_hit(set, E, tag))
     {
         cnt->hit_count++;
+        flags.hit = 1;
         if (op == 'M')
             cnt->hit_count++;
     }
     else
     {
         cnt->miss_count++;
+        flags.missed = 1;
         if (op == 'M')
+        {
             cnt->hit_count++; 
+            flags.hit = 1;
+        }
         CacheLine* empty_line = find_empty_line(set, E);
         if (empty_line == NULL)
+        {
             cnt->eviction_count++;
-            empty_line = &set->lines[generate_uniform_dist_num(0, E-1)];
+            flags.evicted = 1;
+            empty_line = find_lru_line(set, E); 
+        }
         empty_line->valid_bit = 1;  
         empty_line->tag = tag;
+        empty_line->time = global_cnt++;
     }    
+    return flags;
+}
+
+
+void print_verbose(TraceEntry t, ResultFlags flags)
+{
+    printf("%c 0x%lx,%d ", t.op, t.full_addr, t.sz);
+    if (flags.missed)  printf("miss ");
+    if (flags.evicted) printf("eviction ");
+    if (flags.hit)     printf("hit");
+    printf("\n");
 }
 
 
 void printSummary(int hit_count, int miss_count, int eviction_count)
 {
-    printf("hits: %d misses: %d evictions: %d\n", hit_count, miss_count, eviction_count);
+    printf("hits:%d misses:%d evictions:%d\n", hit_count, miss_count, eviction_count);
 }
+
