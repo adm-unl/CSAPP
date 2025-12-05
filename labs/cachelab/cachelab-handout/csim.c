@@ -98,11 +98,7 @@ char is_hit(CacheSet* cache, int E, unsigned long tag);
 
 CacheLine* find_empty_line(CacheSet* set, int E);
 
-int generate_uniform_dist_num(int L, int H);
-
 ResultFlags access_cache(CacheSet* set, char op, unsigned long tag, int E, Count* cnt);
-
-void printSummary(int hit_count, int miss_count, int eviction_count);
 
 void print_verbose(TraceEntry t, ResultFlags flags);
 
@@ -295,11 +291,5 @@ void print_verbose(TraceEntry t, ResultFlags flags)
     if (flags.evicted) printf("eviction ");
     if (flags.hit)     printf("hit");
     printf("\n");
-}
-
-
-void printSummary(int hit_count, int miss_count, int eviction_count)
-{
-    printf("hits:%d misses:%d evictions:%d\n", hit_count, miss_count, eviction_count);
 }
 
